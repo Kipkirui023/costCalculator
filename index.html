@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cost Calculation System</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 30px 15px;
+        font-family: Arial, sans-serif;
+        background: #f1f5f9;
+        color: #1e293b;
+      }
+
+      .container {
+        max-width: 760px;
+        margin: auto;
+        padding: 28px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px #00000012;
+      }
+
+      h1,
+      h2 {
+        color: #12345a;
+      }
+
+      h1,
+      .subtitle {
+        text-align: center;
+      }
+
+      .subtitle {
+        color: #64748b;
+        margin-bottom: 28px;
+      }
+
+      .input-grid,
+      .results {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 16px;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 12px;
+        margin: 24px 0;
+      }
+
+      button {
+        padding: 12px 20px;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: bold;
+      }
+
+      .calculate {
+        background: #12345a;
+        color: white;
+        flex: 1;
+      }
+
+      .clear {
+        background: #e2e8f0;
+      }
+
+      .result {
+        padding: 17px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+
+      .result span {
+        display: block;
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .result strong {
+        font-size: 20px;
+        overflow-wrap: anywhere;
+      }
+
+      .highlight {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+      }
+
+      #message {
+        color: #b91c1c;
+      }
+
+      .note {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 520px) {
+        .container {
+          padding: 20px;
+        }
+
+        .input-grid,
+        .results {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>Cost Calculation System</h1>
+      <p class="subtitle">Enter the details below to calculate the costs.</p>
+
+      <h2>Input Details</h2>
+
+      <form id="costForm">
+        <div class="input-grid">
+          <div>
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" min="0.01" step="any" required />
+          </div>
+
+          <div>
+            <label for="unitCost">Unit Cost (KES)</label>
+            <input type="number" id="unitCost" min="0" step="any" required />
+          </div>
+
+          <div>
+            <label for="systemUnitCost"> System Unit Cost (KES) </label>
+            <input
+              type="number"
+              id="systemUnitCost"
+              min="0"
+              step="any"
+              required
+            />
+          </div>
+        </div>
+
+        <p class="note">
+          Transport rate is configured in the JavaScript code. Change
+          TRANSPORT_RATE to your required cost per unit.
+        </p>
+
+        <div class="buttons">
+          <button type="submit" class="calculate">Calculate</button>
+          <button type="reset" class="clear">Clear</button>
+        </div>
+      </form>
+
+      <p id="message" role="alert"></p>
+
+      <h2>Calculation Results</h2>
+
+      <div class="results">
+        <div class="result">
+          <span>QPrice</span>
+          <strong id="qprice">KES 0.00</strong>
+        </div>
+
+        <div class="result">
+          <span>Transport Cost (Quantity × Rate)</span>
+          <strong id="transportCost">KES 0.00</strong>
+        </div>
+
+        <div class="result">
+          <span>VAT (16.03%)</span>
+          <strong id="vat">KES 0.00</strong>
+        </div>
+
+        <div class="result highlight">
+          <span>Net Total</span>
+          <strong id="netTotal">KES 0.00</strong>
+        </div>
+
+        <div class="result highlight">
+          <span>Transport (Net Total − VAT − QPrice)</span>
+          <strong id="transport">KES 0.00</strong>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Set the transport cost per unit here.
+      const TRANSPORT_RATE = 0;
+
+      const form = document.getElementById("costForm");
+
+      function formatKES(amount) {
+        return (
+          "KES " +
+          amount.toLocaleString("en-KE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        );
+      }
+
+      function display(id, amount) {
+        document.getElementById(id).textContent = formatKES(amount);
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const quantity = Number(document.getElementById("quantity").value);
+
+        const unitCost = Number(document.getElementById("unitCost").value);
+
+        const systemUnitCost = Number(
+          document.getElementById("systemUnitCost").value,
+        );
+
+        const message = document.getElementById("message");
+
+        if (
+          !Number.isFinite(quantity) ||
+          !Number.isFinite(unitCost) ||
+          !Number.isFinite(systemUnitCost) ||
+          quantity <= 0 ||
+          unitCost < 0 ||
+          systemUnitCost < 0
+        ) {
+          message.textContent =
+            "Enter a positive quantity and non-negative costs.";
+          return;
+        }
+
+        message.textContent = "";
+
+        // 1. QPrice = Quantity × Unit Cost
+        const qprice = quantity * unitCost;
+
+        // 2. Transport Cost = Quantity × Transport Rate
+        const transportCost = quantity * TRANSPORT_RATE;
+
+        // 3. VAT = QPrice × 0.1603
+        const vat = qprice * 0.1603;
+
+        // 4. Net Total = Quantity × System Unit Cost
+        const netTotal = quantity * systemUnitCost;
+
+        // 5. Transport = Net Total − VAT − QPrice
+        const transport = netTotal - vat - qprice;
+
+        display("qprice", qprice);
+        display("transportCost", transportCost);
+        display("vat", vat);
+        display("netTotal", netTotal);
+        display("transport", transport);
+      });
+
+      form.addEventListener("reset", function () {
+        document.getElementById("message").textContent = "";
+
+        ["qprice", "transportCost", "vat", "netTotal", "transport"].forEach(
+          (id) => display(id, 0),
+        );
+      });
+    </script>
+  </body>
+</html>
